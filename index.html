@@ -32,7 +32,7 @@
     if (sessionActive === 'active' && sessionTime) {
       const timePassed = Date.now() - Number(sessionTime);
       if (timePassed < SESSION_DURATION) {
-        window.location.replace('https://tiodisk.top/cpanel.html');
+        window.location.replace('admin.html');
       } else {
         localStorage.removeItem('sf_admin_session');
         localStorage.removeItem('sf_admin_session_time');
@@ -251,7 +251,7 @@
           <div class="pt-2 space-y-2">
             <button 
               type="submit" 
-              id="resetPassBtn"
+              id="resetPassBtn" 
               class="w-full bg-black hover:bg-neutral-800 active:scale-[0.98] text-white py-3.5 rounded-2xl text-xs font-bold tracking-wide transition shadow-sm flex items-center justify-center gap-2"
             >
               <span id="resetPassBtnText">Verify & Update Password</span>
@@ -396,7 +396,7 @@
           wrapper.style.transform = 'scale(0.96)';
 
           setTimeout(() => {
-            window.location.replace('https://tiodisk.top/cpanel.html');
+            window.location.replace('admin.html');
           }, 350);
         } else {
           throw new Error('Invalid credentials');
