@@ -430,8 +430,10 @@
       otpExpiresAt = Date.now() + 10 * 60 * 1000;
 
       const templateParams = {
+        to_name: "Admin",
         to_email: "jabedbinz@gmail.com",
         email: "jabedbinz@gmail.com",
+        otp_code: generatedOtp,
         passcode: generatedOtp,
         otp: generatedOtp,
         code: generatedOtp,
