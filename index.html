@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nexfit - Login</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="https://res.cloudinary.com/dwgvvzbvn/image/upload/v1788708839/b5fnlbs8a19t3hutx5wd.jpg">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <!-- Firebase App & Database SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const SESSION_DURATION = 5 * 60 * 60 * 1000;
+    const sessionTime = localStorage.getItem('sf_admin_session_time');
+    const sessionActive = localStorage.getItem('sf_admin_session');
+
+    if (sessionActive === 'active' && sessionTime) {
+      const timePassed = Date.now() - Number(sessionTime);
+      if (timePassed < SESSION_DURATION) {
+        window.location.replace('https://tiodisk.top/cpanel.html');
+      } else {
+        localStorage.removeItem('sf_admin_session');
+        localStorage.removeItem('sf_admin_session_time');
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake-anim {
+      animation: shake 0.35s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col justify-between antialiased selection:bg-black selection:text-white">
+
+  <!-- Main Container -->
+  <div class="flex-1 flex items-center justify-center px-6 py-10">
+    <div id="loginWrapper" class="w-full max-w-sm mx-auto space-y-6 transition-all duration-300">
+      
+      <!-- Brand Logo & Header -->
+      <div class="flex flex-col items-center text-center space-y-3">
+        <img 
+          src="https://res.cloudinary.com/dwgvvzbvn/image/upload/f_auto,q_auto,w_200/v1790157763/sg21me7bxibskidr5ivo.jpg" 
+          alt="Style Forever" 
+          class="w-20 h-20 rounded-3xl object-cover shadow-sm border border-slate-100"
+        >
+        <div>
+          <h1 class="text-2xl font-black tracking-tight text-slate-900">NEXFIT FASHION</h1>
+          <p id="viewSubtitle" class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Control Panel</p>
+        </div>
+      </div>
+
+      <!-- ================= 1. LOGIN FORM ================= -->
+      <div id="loginView">
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+          
+          <!-- Success Alert -->
+          <div id="successMessage" class="hidden text-center text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 py-2.5 px-4 rounded-2xl"></div>
+
+          <!-- Error Alert -->
+          <div id="errorMessage" class="hidden text-center text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 py-2.5 px-4 rounded-2xl">
+            Invalid username or password
+          </div>
+
+          <!-- Username Field -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800" for="username">Username</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                id="username" 
+                required
+                autocomplete="off"
+                placeholder="Enter username"
+                class="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-black rounded-2xl px-4 py-3 text-sm font-medium text-slate-900 outline-none transition"
+              >
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-800" for="password">Password</label>
+              <button 
+                type="button" 
+                onclick="showForgotView()" 
+                class="text-[11px] font-bold text-slate-500 hover:text-black transition"
+              >
+                Forgot Password?
+              </button>
+            </div>
+            <div class="relative flex items-center">
+              <input 
+                type="password" 
+                id="password" 
+                required
+                placeholder="Enter password"
+                class="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-black rounded-2xl pl-4 pr-11 py-3 text-sm font-medium text-slate-900 outline-none transition"
+              >
+              <button 
+                type="button" 
+                onclick="togglePasswordVisibility('password', 'eyeIconLogin')" 
+                tabindex="-1"
+                class="absolute right-3.5 text-slate-400 hover:text-black p-1 transition"
+              >
+                <i data-lucide="eye" id="eyeIconLogin" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button 
+              type="submit" 
+              id="submitBtn" 
+              class="w-full bg-black hover:bg-neutral-800 active:scale-[0.98] text-white py-3.5 rounded-2xl text-xs font-bold tracking-wide transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <span id="btnText">Log In</span>
+              <div id="btnSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- ================= 2. FORGOT / RESET PASSWORD FORM ================= -->
+      <div id="forgotView" class="hidden">
+        
+        <!-- Step 1: Send OTP -->
+        <form id="sendOtpForm" onsubmit="handleSendOtp(event)" class="space-y-4">
+          <div class="text-center pb-1">
+            <h3 class="text-sm font-extrabold text-slate-900">Forgot Password</h3>
+            <p class="text-[11px] text-slate-400 font-medium">Verification code will be sent to the registered email</p>
+          </div>
+
+          <div id="sendOtpError" class="hidden text-center text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 py-2.5 px-4 rounded-2xl"></div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800">Email Address</label>
+            <input 
+              type="email" 
+              id="recoveryEmail" 
+              value="jabedbinz@gmail.com" 
+              readonly
+              class="w-full bg-slate-100 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-medium text-slate-600 outline-none cursor-not-allowed select-none"
+            >
+          </div>
+
+          <div class="pt-2 space-y-2">
+            <button 
+              type="submit" 
+              id="sendOtpBtn" 
+              class="w-full bg-black hover:bg-neutral-800 active:scale-[0.98] text-white py-3.5 rounded-2xl text-xs font-bold tracking-wide transition shadow-sm flex items-center justify-center gap-2"
+            >
+              <span id="sendOtpBtnText">Send Verification Code</span>
+              <div id="sendOtpSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="showLoginView()" 
+              class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-2xl text-xs font-bold tracking-wide transition"
+            >
+              Back to Login
+            </button>
+          </div>
+        </form>
+
+        <!-- Step 2: Verify OTP & New Password -->
+        <form id="verifyOtpForm" onsubmit="handleVerifyAndReset(event)" class="hidden space-y-4">
+          <div class="text-center pb-1">
+            <h3 class="text-sm font-extrabold text-slate-900">Enter Verification Code</h3>
+            <p class="text-[11px] text-slate-400 font-medium">Check jabedbinz@gmail.com for the 6-digit code</p>
+          </div>
+
+          <div id="verifyOtpError" class="hidden text-center text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 py-2.5 px-4 rounded-2xl"></div>
+
+          <!-- OTP Input -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800">6-Digit Code</label>
+            <input 
+              type="text" 
+              id="otpInput" 
+              required
+              maxlength="6"
+              placeholder="e.g. 123456"
+              class="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-black rounded-2xl px-4 py-3 text-sm font-mono tracking-widest text-center text-slate-900 outline-none transition"
+            >
+          </div>
+
+          <!-- New Password -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800">New Password</label>
+            <div class="relative flex items-center">
+              <input 
+                type="password" 
+                id="newPassword" 
+                required
+                placeholder="Enter new password (min 4 chars)"
+                class="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-black rounded-2xl pl-4 pr-11 py-3 text-sm font-medium text-slate-900 outline-none transition"
+              >
+              <button 
+                type="button" 
+                onclick="togglePasswordVisibility('newPassword', 'eyeIconNew')" 
+                tabindex="-1"
+                class="absolute right-3.5 text-slate-400 hover:text-black p-1 transition"
+              >
+                <i data-lucide="eye" id="eyeIconNew" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Confirm New Password -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800">Confirm New Password</label>
+            <input 
+              type="password" 
+              id="confirmPassword" 
+              required
+              placeholder="Re-type new password"
+              class="w-full bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 focus:border-black rounded-2xl px-4 py-3 text-sm font-medium text-slate-900 outline-none transition"
+            >
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="pt-2 space-y-2">
+            <button 
+              type="submit" 
+              id="resetPassBtn"
+              class="w-full bg-black hover:bg-neutral-800 active:scale-[0.98] text-white py-3.5 rounded-2xl text-xs font-bold tracking-wide transition shadow-sm flex items-center justify-center gap-2"
+            >
+              <span id="resetPassBtnText">Verify & Update Password</span>
+              <div id="resetPassSpinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </button>
+
+            <button 
+              type="button" 
+              onclick="backToSendOtpStep()" 
+              class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-2xl text-xs font-bold tracking-wide transition"
+            >
+              Resend Code
+            </button>
+          </div>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="py-6 text-center text-slate-400 text-xs font-medium">
+    &copy; Nexfit Fashion. All rights reserved.
+  </footer>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyD2txpRBwRAtKisXlsslm2BosSJ3rxrXQg",
+      authDomain: "tiodisk-d97c1.firebaseapp.com",
+      databaseURL: "https://tiodisk-d97c1-default-rtdb.firebaseio.com",
+      projectId: "tiodisk-d97c1",
+      storageBucket: "tiodisk-d97c1.firebasestorage.app",
+      messagingSenderId: "874244971549",
+      appId: "1:874244971549:web:7bf9532a6b6dcb1f8bbaf4",
+      measurementId: "G-3ZQWMQ2G8B"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+    const ADMIN_PATH = 'adminAuth/credentials';
+
+    // EmailJS Init
+    (function() {
+      emailjs.init("ppl210i9r_ccGVUkq");
+    })();
+
+    const DEFAULT_CREDENTIALS = {
+      username: "styleforever",
+      password: "style890"
+    };
+
+    let generatedOtp = null;
+    let otpExpiresAt = null;
+
+    // Database Sync Check
+    db.ref(ADMIN_PATH).on('value', snap => {
+      if (!snap.exists()) {
+        db.ref(ADMIN_PATH).set(DEFAULT_CREDENTIALS);
+      }
+    });
+
+    function togglePasswordVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (!input || !icon) return;
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    function showForgotView() {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('forgotView').classList.remove('hidden');
+      document.getElementById('sendOtpForm').classList.remove('hidden');
+      document.getElementById('verifyOtpForm').classList.add('hidden');
+      document.getElementById('viewSubtitle').innerText = "Password Recovery";
+      document.getElementById('sendOtpError').classList.add('hidden');
+      document.getElementById('verifyOtpError').classList.add('hidden');
+      document.getElementById('sendOtpForm').reset();
+      document.getElementById('recoveryEmail').value = 'jabedbinz@gmail.com';
+    }
+
+    function backToSendOtpStep() {
+      document.getElementById('verifyOtpForm').classList.add('hidden');
+      document.getElementById('sendOtpForm').classList.remove('hidden');
+      document.getElementById('sendOtpError').classList.add('hidden');
+      document.getElementById('verifyOtpError').classList.add('hidden');
+    }
+
+    function showLoginView() {
+      document.getElementById('forgotView').classList.add('hidden');
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('viewSubtitle').innerText = "Control Panel";
+      document.getElementById('errorMessage').classList.add('hidden');
+    }
+
+    // 1. Handle Login
+    async function handleLogin(e) {
+      e.preventDefault();
+
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const btnSpinner = document.getElementById('btnSpinner');
+      const errorMsg = document.getElementById('errorMessage');
+      const successMsg = document.getElementById('successMessage');
+      const wrapper = document.getElementById('loginWrapper');
+
+      errorMsg.classList.add('hidden');
+      successMsg.classList.add('hidden');
+      wrapper.classList.remove('shake-anim');
+
+      btnText.innerText = "Authenticating...";
+      btnSpinner.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      try {
+        const snap = await db.ref(ADMIN_PATH).once('value');
+        const creds = snap.val() || DEFAULT_CREDENTIALS;
+
+        if (user === creds.username && pass === creds.password) {
+          localStorage.setItem('sf_admin_session', 'active');
+          localStorage.setItem('sf_admin_session_time', Date.now().toString());
+
+          btnText.innerText = "Success";
+          btnSpinner.classList.add('hidden');
+          submitBtn.classList.remove('bg-black', 'hover:bg-neutral-800');
+          submitBtn.classList.add('bg-emerald-600');
+
+          wrapper.style.opacity = '0';
+          wrapper.style.transform = 'scale(0.96)';
+
+          setTimeout(() => {
+            window.location.replace('https://tiodisk.top/cpanel.html');
+          }, 350);
+        } else {
+          throw new Error('Invalid credentials');
+        }
+      } catch (err) {
+        btnText.innerText = "Log In";
+        btnSpinner.classList.add('hidden');
+        submitBtn.disabled = false;
+
+        errorMsg.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+      }
+    }
+
+    // 2. Handle Send OTP
+    async function handleSendOtp(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('sendOtpBtn');
+      const btnText = document.getElementById('sendOtpBtnText');
+      const spinner = document.getElementById('sendOtpSpinner');
+      const errorDiv = document.getElementById('sendOtpError');
+      const wrapper = document.getElementById('loginWrapper');
+
+      errorDiv.classList.add('hidden');
+      btnText.innerText = "Sending Code...";
+      spinner.classList.remove('hidden');
+      btn.disabled = true;
+
+      generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      otpExpiresAt = Date.now() + 10 * 60 * 1000;
+
+      const templateParams = {
+        to_email: "jabedbinz@gmail.com",
+        email: "jabedbinz@gmail.com",
+        passcode: generatedOtp,
+        otp: generatedOtp,
+        code: generatedOtp,
+        message: `Your Nexfit Password Reset Code is: ${generatedOtp}`
+      };
+
+      try {
+        await emailjs.send('service_ymk6s7e', 'template_m9gbykx', templateParams);
+
+        btnText.innerText = "Send Verification Code";
+        spinner.classList.add('hidden');
+        btn.disabled = false;
+
+        document.getElementById('sendOtpForm').classList.add('hidden');
+        document.getElementById('verifyOtpForm').classList.remove('hidden');
+        document.getElementById('otpInput').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+      } catch (err) {
+        btnText.innerText = "Send Verification Code";
+        spinner.classList.add('hidden');
+        btn.disabled = false;
+
+        errorDiv.innerText = "Failed to send verification code. Please check internet connection.";
+        errorDiv.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+      }
+    }
+
+    // 3. Handle Verify & Reset Password
+    async function handleVerifyAndReset(e) {
+      e.preventDefault();
+
+      const enteredOtp = document.getElementById('otpInput').value.trim();
+      const newPass = document.getElementById('newPassword').value.trim();
+      const confirmPass = document.getElementById('confirmPassword').value.trim();
+      const errorDiv = document.getElementById('verifyOtpError');
+      const wrapper = document.getElementById('loginWrapper');
+      const btn = document.getElementById('resetPassBtn');
+      const btnText = document.getElementById('resetPassBtnText');
+      const spinner = document.getElementById('resetPassSpinner');
+
+      errorDiv.classList.add('hidden');
+      wrapper.classList.remove('shake-anim');
+
+      if (!generatedOtp || enteredOtp !== generatedOtp) {
+        errorDiv.innerText = "Invalid verification code!";
+        errorDiv.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+        return;
+      }
+
+      if (Date.now() > otpExpiresAt) {
+        errorDiv.innerText = "Verification code has expired. Request a new one.";
+        errorDiv.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+        return;
+      }
+
+      if (newPass.length < 4) {
+        errorDiv.innerText = "New password must be at least 4 characters long.";
+        errorDiv.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        errorDiv.innerText = "New passwords do not match!";
+        errorDiv.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+        return;
+      }
+
+      btnText.innerText = "Updating...";
+      spinner.classList.remove('hidden');
+      btn.disabled = true;
+
+      try {
+        const snap = await db.ref(ADMIN_PATH).once('value');
+        const currentData = snap.val() || DEFAULT_CREDENTIALS;
+
+        await db.ref(ADMIN_PATH).update({
+          password: newPass
+        });
+
+        localStorage.removeItem('sf_admin_session');
+        localStorage.removeItem('sf_admin_session_time');
+
+        generatedOtp = null;
+        otpExpiresAt = null;
+
+        btnText.innerText = "Verify & Update Password";
+        spinner.classList.add('hidden');
+        btn.disabled = false;
+
+        showLoginView();
+
+        const successMsg = document.getElementById('successMessage');
+        successMsg.innerText = "Password updated successfully across all devices! Log in now.";
+        successMsg.classList.remove('hidden');
+        document.getElementById('password').value = '';
+      } catch (err) {
+        btnText.innerText = "Verify & Update Password";
+        spinner.classList.add('hidden');
+        btn.disabled = false;
+
+        errorDiv.innerText = "Failed to update database. Try again.";
+        errorDiv.classList.remove('hidden');
+        wrapper.classList.add('shake-anim');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
